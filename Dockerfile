@@ -4,7 +4,7 @@ COPY go.mod go.sum /go/src/gitlab.com/idoko/letterpress/
 WORKDIR /go/src/gitlab.com/idoko/letterpress
 RUN go mod download
 COPY . /go/src/gitlab.com/idoko/letterpress
-RUN go build -o build/letterpress gitlab.cm/idoko/letterpress
+RUN go build -o build/letterpress gitlab.com/idoko/letterpress/cmd/api
 
 FROM alpine
 

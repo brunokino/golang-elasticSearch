@@ -13,9 +13,10 @@ func main() {
 	logger := zerolog.New(os.Stderr).With().Timestamp().Logger()
 	var dbPort int
 	var err error
-	if dbPort, err = strconv.Atoi(os.Getenv("POSRGRES_PORT")); err != nil {
-		logger.Err(err)
-		logger.Fatal().Msg("Could not parse database port. Exiting...")
+	port := os.Getenv("POSTGRES_PORT")
+	if dbPort, err = strconv.Atoi(port); err != nil {
+		logger.Err(err).Msg("Could not parse database port")
+		os.Exit(1)
 	}
 	dbConfig := db.Config{
 		Host: os.Getenv("POSTGRES_HOST"),
@@ -24,10 +25,11 @@ func main() {
 		Password: os.Getenv("POSTGRES_PASSWORD"),
 		DbName: os.Getenv("POSTGRES_DB"),
 	}
+	logger.Info().Interface("config", &dbConfig).Msg("config:")
 	dbInstance, err := db.Init(dbConfig)
 	if err != nil {
-		logger.Err(err)
-		logger.Fatal().Msg("Could not open database connection. Exiting...")
+		logger.Err(err).Msg("Connection failed")
+		os.Exit(1)
 	}
 	logger.Info().Msg("Database connection established")
 
@@ -35,5 +37,5 @@ func main() {
 	router := gin.Default()
 	rg := router.Group("/v1")
 	h.Register(rg)
-	router.Run("8080")
+	router.Run(":8080")
 }

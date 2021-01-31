@@ -3,16 +3,15 @@ version: "3"
 services:
   postgres:
     image: postgres
-    restart: always
+    restart: unless-stopped
     hostname: postgres
-    env_file:
-      - .env
+    env_file: .env
     ports:
       - "5432:5432"
     volumes:
-    - type: bind
+    - type: volume
       source: data
-      destination: /var/
+      target: /var/lib/postgresql/data
 
   #elastic:
 
@@ -21,10 +20,11 @@ services:
       context: .
       dockerfile: Dockerfile
     hostname: api
-    env_file:
-      - .env
+    env_file: .env
     ports:
     - "8080:8080"
+    depends_on:
+      - postgres
 
 volumes:
   data:
