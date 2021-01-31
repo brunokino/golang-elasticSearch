@@ -20,4 +20,5 @@ func New(database db.Database, logger zerolog.Logger) *Handler {
 
 func (h *Handler) Register(group *gin.RouterGroup) {
 	group.GET("/posts", h.GetPosts)
+	group.GET("/posts/:id", h.GetPost)
 }
