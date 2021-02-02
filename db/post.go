@@ -1,12 +1,21 @@
 package db
 
 import (
+	"bytes"
+	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"github.com/elastic/go-elasticsearch/v7"
+	"github.com/elastic/go-elasticsearch/v7/esapi"
 	"gitlab.com/idoko/letterpress/models"
+	"strconv"
 )
 
-var ErrNoRecord = fmt.Errorf("no matching record found")
+var (
+	ErrNoRecord = fmt.Errorf("no matching record found")
+	elasticPostIndex = "posts"
+)
 
 func (db Database) SavePost(post *models.Post) error {
 	var id int
@@ -16,7 +25,30 @@ func (db Database) SavePost(post *models.Post) error {
 		return err
 	}
 	post.ID = id
+
+	// dereference post since we have no plan to mutate it in the indexPost function
+	if res, err := indexPost(db.esClient, *post); err != nil {
+		db.Logger.Err(err).Msg(fmt.Sprintf("could not index document ID=%d", post.ID))
+		return err
+	} else {
+		db.Logger.Info().Msg(fmt.Sprintf("[%s] index document ID=%d", res.Status(), post.ID))
+	}
+
 	return nil
+}
+
+func indexPost(esClient *elasticsearch.Client, post models.Post) (*esapi.Response, error) {
+	body, err := json.Marshal(post)
+	if err != nil {
+		return nil, err
+	}
+	request := esapi.IndexRequest{
+		Index: elasticPostIndex,
+		DocumentID: strconv.Itoa(post.ID),
+		Refresh: "true",
+		Body: bytes.NewBuffer(body),
+	}
+	return request.Do(context.Background(), esClient)
 }
 
 func (db Database) GetPostById(postId int) (models.Post, error) {
@@ -48,3 +80,4 @@ func (db Database) GetPosts() ([]models.Post, error) {
 	}
 	return list, nil
 }
+
