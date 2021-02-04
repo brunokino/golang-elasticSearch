@@ -51,6 +51,40 @@ func indexPost(esClient *elasticsearch.Client, post models.Post) (*esapi.Respons
 	return request.Do(context.Background(), esClient)
 }
 
+func deleteFromIndex(esClient *elasticsearch.Config, post models.Post) (*esapi.Response, error) {
+
+}
+
+func (db Database) UpdatePost(post models.Post) error {
+	query := "UPDATE posts SET title=$1, body=$2 WHERE id=$3"
+	_, err := db.Conn.Exec(query, post.Title, post.Body, post.ID)
+	if err != nil {
+		return err
+	}
+	if res, err := indexPost(db.esClient, post); err != nil {
+		db.Logger.Err(err).Msg(fmt.Sprintf("could not update document ID=%d", post.ID))
+		return err
+	} else {
+		db.Logger.Info().Msg(fmt.Sprintf("[%s] updated index for document ID=%d", res.Status(), post.ID))
+	}
+	return nil
+}
+
+func (db Database) DeletePost(post models.Post) error {
+	query := ""
+	_, err := db.Conn.Exec(query, post.ID)
+	if err != nil {
+		return err
+	}
+	if res, err := deleteFromIndex(db.esClient, post); err != nil {
+		db.Logger.Err(err).Msg(fmt.Sprintf("could not delete document ID=%d from index", post.ID))
+		return err
+	} else {
+		db.Logger.Info().Msg(fmt.Sprintf("[%s] deleted document ID=%d from index", res.Status(), post.ID))
+	}
+	return nil
+}
+
 func (db Database) GetPostById(postId int) (models.Post, error) {
 	post := models.Post{}
 	query := "SELECT id, title, body FROM posts WHERE id = $1"

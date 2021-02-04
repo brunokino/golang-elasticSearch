@@ -1,44 +1,45 @@
 package main
 
 import (
-	"fmt"
+	"os"
+	"strconv"
+
 	"github.com/elastic/go-elasticsearch/v7"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
 	db "gitlab.com/idoko/letterpress/db"
 	"gitlab.com/idoko/letterpress/handler"
-	"os"
-	"strconv"
 )
 
 func main() {
 	var dbPort int
 	var err error
-	var esclient *elasticsearch.Client
+	var esClient *elasticsearch.Client
 	logger := zerolog.New(os.Stderr).With().Timestamp().Logger()
-	esConfig := elasticsearch.Config{
+	/*esConfig := elasticsearch.Config{
 		Addresses: []string{
-			fmt.Sprintf("http://%s/%s", os.Getenv("ELASTIC_HOST"), os.Getenv("ELASTIC_PORT")),
+			fmt.Sprintf("http://%s:%s", os.Getenv("ELASTIC_HOST"), os.Getenv("ELASTIC_PORT")),
 		},
-	}
-	esclient, err = elasticsearch.NewClient(esConfig)
+	}*/
+	//esClient, err = elasticsearch.NewClient(esConfig)
+	esClient, err = elasticsearch.NewDefaultClient()
 	if err != nil {
 		logger.Err(err).Msg("failed to create client")
 	}
-		port := os.Getenv("POSTGRES_PORT")
+	port := os.Getenv("POSTGRES_PORT")
 	if dbPort, err = strconv.Atoi(port); err != nil {
 		logger.Err(err).Msg("failed to parse database port")
 		os.Exit(1)
 	}
 	dbConfig := db.Config{
-		Host: os.Getenv("POSTGRES_HOST"),
-		Port: dbPort,
+		Host:     os.Getenv("POSTGRES_HOST"),
+		Port:     dbPort,
 		Username: os.Getenv("POSTGRES_USER"),
 		Password: os.Getenv("POSTGRES_PASSWORD"),
-		DbName: os.Getenv("POSTGRES_DB"),
+		DbName:   os.Getenv("POSTGRES_DB"),
 
-		ESClient: esclient,
-		Logger: logger,
+		ESClient: esClient,
+		Logger:   logger,
 	}
 	logger.Info().Interface("config", &dbConfig).Msg("config:")
 	dbInstance, err := db.Init(dbConfig)
