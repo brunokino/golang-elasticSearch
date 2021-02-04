@@ -3,25 +3,19 @@ package db
 import (
 	"database/sql"
 	"fmt"
-	"github.com/elastic/go-elasticsearch/v7"
 	_ "github.com/lib/pq"
-	"github.com/rs/zerolog"
 )
 
 type Database struct {
 	Conn *sql.DB
-	esClient *elasticsearch.Client
-	Logger zerolog.Logger
 }
 
 type Config struct {
-	Host string
-	Port int
+	Host     string
+	Port     int
 	Username string
 	Password string
-	DbName string
-	ESClient *elasticsearch.Client
-	Logger zerolog.Logger
+	DbName   string
 }
 
 func Init(cfg Config) (Database, error) {
@@ -34,8 +28,6 @@ func Init(cfg Config) (Database, error) {
 	}
 
 	db.Conn = conn
-	db.esClient = cfg.ESClient
-	db.Logger = cfg.Logger
 	err = db.Conn.Ping()
 	if err != nil {
 		return db, err

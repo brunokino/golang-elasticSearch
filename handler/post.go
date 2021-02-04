@@ -25,6 +25,27 @@ func (h *Handler) CreatePost(c *gin.Context) {
 	}
 }
 
+func (h *Handler) DeletePost(c *gin.Context) {
+	var id int
+	var err error
+	if id, err = strconv.Atoi(c.Param("id")); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid post id"})
+		return
+	}
+	err = h.DB.DeletePost(id)
+	switch err {
+	case db.ErrNoRecord:
+		c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("could not find post with id: %d", id)})
+		break
+	case nil:
+		c.JSON(http.StatusOK, gin.H{"data": map[string]string{"message": "post deleted"}})
+		break
+	default:
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		break
+	}
+}
+
 func (h *Handler) GetPosts(c *gin.Context) {
 	posts, err := h.DB.GetPosts()
 	if err != nil {

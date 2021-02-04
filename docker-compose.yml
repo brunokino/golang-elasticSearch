@@ -6,14 +6,13 @@ services:
     restart: unless-stopped
     hostname: postgres
     env_file: .env
+    # environment so that we can run sql-migrate in the container without fiddling with env stuff
+    # environment:
+    #  - POSTGRES_DSN="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=disable"
     ports:
       - "5432:5432"
     volumes:
-    - type: volume
-      source: pgdata
-      target: /var/lib/postgresql/data
-
-  #elastic:
+      - pgdata:/var/lib/postgresql/data
 
   api:
     build:
@@ -22,33 +21,25 @@ services:
     hostname: api
     env_file: .env
     ports:
-    - "8080:8080"
+      - "8080:8080"
+    volumes:
+      - ./db/migrations/:/migrations/
     depends_on:
       - postgres
-      - elasticsearch
+#      - elasticsearch
 
-  elasticsearch:
-    image: 'docker.elastic.co/elasticsearch/elasticsearch:7.10.2'
-    environment:
-      - discovery.type=single-node
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-    ports:
-    - "9200:9200"
-    volumes:
-    - esdata:/usr/share/elasticsearch/data
-
-  kibana:
-    image: 'docker.elastic.co/kibana/kibana:7.10.2'
-    ports:
-    - "5601:5601"
-    depends_on:
-      - elasticsearch
-    environment:
-      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
-
+#  elasticsearch:
+#    image: 'docker.elastic.co/elasticsearch/elasticsearch:7.10.2'
+#    environment:
+#      - discovery.type=single-node
+#      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+#    ports:
+#      - "9200:9200"
+#    volumes:
+#      - esdata:/usr/share/elasticsearch/data
 
 volumes:
   pgdata:
     driver: local
-  esdata:
-    driver: local
+#  esdata:
+#    driver: local
