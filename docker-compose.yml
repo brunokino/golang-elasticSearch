@@ -26,20 +26,32 @@ services:
       - ./db/migrations/:/migrations/
     depends_on:
       - postgres
-#      - elasticsearch
 
-#  elasticsearch:
-#    image: 'docker.elastic.co/elasticsearch/elasticsearch:7.10.2'
-#    environment:
-#      - discovery.type=single-node
-#      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-#    ports:
-#      - "9200:9200"
-#    volumes:
-#      - esdata:/usr/share/elasticsearch/data
+  elasticsearch:
+    image: 'docker.elastic.co/elasticsearch/elasticsearch:7.10.2'
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+
+  logstash:
+    build:
+      context: logstash
+    env_file: .env
+    volumes:
+      - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml
+      - ./logstash/config/pipelines.yml:/usr/share/logstash/config/pipelines.yml
+      - ./logstash/pipelines/:/usr/share/logstash/pipeline/
+      - ./logstash/queries/:/usr/share/logstash/config/queries/
+    depends_on:
+      - postgres
+      - elasticsearch
 
 volumes:
   pgdata:
     driver: local
-#  esdata:
-#    driver: local
+  esdata:
+    driver: local

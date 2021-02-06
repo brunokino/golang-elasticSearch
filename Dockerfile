@@ -1,7 +1,5 @@
 FROM golang:1.15.7-buster
 
-RUN go get -tags 'postgres' -u github.com/golang-migrate/migrate/cmd/migrate
-
 COPY go.mod go.sum /go/src/gitlab.com/idoko/letterpress/
 WORKDIR /go/src/gitlab.com/idoko/letterpress
 RUN go mod download
