@@ -26,6 +26,7 @@ func main() {
 		Username: os.Getenv("POSTGRES_USER"),
 		Password: os.Getenv("POSTGRES_PASSWORD"),
 		DbName:   os.Getenv("POSTGRES_DB"),
+		Logger: logger,
 	}
 	logger.Info().Interface("config", &dbConfig).Msg("config:")
 	dbInstance, err := db.Init(dbConfig)

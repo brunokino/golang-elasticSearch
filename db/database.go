@@ -4,10 +4,12 @@ import (
 	"database/sql"
 	"fmt"
 	_ "github.com/lib/pq"
+	"github.com/rs/zerolog"
 )
 
 type Database struct {
 	Conn *sql.DB
+	Logger zerolog.Logger
 }
 
 type Config struct {
@@ -16,6 +18,7 @@ type Config struct {
 	Username string
 	Password string
 	DbName   string
+	Logger zerolog.Logger
 }
 
 func Init(cfg Config) (Database, error) {
@@ -28,6 +31,7 @@ func Init(cfg Config) (Database, error) {
 	}
 
 	db.Conn = conn
+	db.Logger = cfg.Logger
 	err = db.Conn.Ping()
 	if err != nil {
 		return db, err
