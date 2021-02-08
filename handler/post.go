@@ -26,17 +26,28 @@ func (h *Handler) CreatePost(c *gin.Context) {
 }
 
 func (h *Handler) UpdatePost(c *gin.Context) {
+	var id int
 	var post models.Post
 	var err error
-	if err = c.ShouldBindJSON(&post); err != nil {
-		h.Logger.Err(err).Msg("could not parse request body")
-		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("invalid request: %s", err.Error())})
+	if id, err = strconv.Atoi(c.Param("id")); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid post id"})
 		return
 	}
-	err = h.DB.UpdatePost(post)
+	if err = c.ShouldBindJSON(&post); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("could not parse request: %s", err.Error())})
+		return
+	}
+
+	err = h.DB.UpdatePost(id, post)
 	if err != nil {
-		h.Logger.Err(err).Msg("could not update post")
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("could not update post: %s", err.Error())})
+		switch err {
+		case db.ErrNoRecord:
+			c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("could not find post with id: %d", id)})
+		default:
+			h.Logger.Err(err).Msg("could not update post")
+			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("could not update post: %s", err.Error())})
+		}
+		return
 	} else {
 		c.JSON(http.StatusOK, gin.H{"post": post})
 	}

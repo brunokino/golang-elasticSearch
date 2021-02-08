@@ -5,8 +5,6 @@ SELECT l.id,
        p.title,
        p.body
 FROM post_logs l
-         INNER JOIN posts p
-                    ON p.id = l.post_id
-WHERE l.id > 0
-  AND l.created_at < NOW()
-ORDER BY l.id;
+         LEFT JOIN posts p
+                   ON p.id = l.post_id
+WHERE l.id > :sql_last_value ORDER BY l.id;

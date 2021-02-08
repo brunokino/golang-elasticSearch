@@ -32,13 +32,14 @@ func (db Database) SavePost(post *models.Post) error {
 	return nil
 }
 
-func (db Database) UpdatePost(post models.Post) error {
+func (db Database) UpdatePost(postId int, post models.Post) error {
 	query := "UPDATE posts SET title=$1, body=$2 WHERE id=$3"
-	_, err := db.Conn.Exec(query, post.Title, post.Body, post.ID)
+	_, err := db.Conn.Exec(query, post.Title, post.Body, postId)
 	if err != nil {
 		return err
 	}
 
+	post.ID = postId
 	logQuery := "INSERT INTO post_logs(post_id, operation) VALUES ($1, $2)"
 	_, err = db.Conn.Exec(logQuery, post.ID, updateOp)
 	if err != nil {
