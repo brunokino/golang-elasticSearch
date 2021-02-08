@@ -51,6 +51,9 @@ func (db Database) DeletePost(postId int) error {
 	query := "DELETE FROM Posts WHERE id=$1"
 	_, err := db.Conn.Exec(query, postId)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return ErrNoRecord
+		}
 		return err
 	}
 

@@ -19,8 +19,10 @@ func New(database db.Database, logger zerolog.Logger) *Handler {
 }
 
 func (h *Handler) Register(group *gin.RouterGroup) {
-	group.GET("/posts", h.GetPosts)
-	group.POST("/posts", h.CreatePost)
 	group.GET("/posts/:id", h.GetPost)
 	group.DELETE("/posts/:id", h.DeletePost)
+
+	group.GET("/posts", h.GetPosts)
+	group.POST("/posts", h.CreatePost)
+	group.PUT("/posts", h.UpdatePost)
 }
