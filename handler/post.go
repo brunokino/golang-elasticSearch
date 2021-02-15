@@ -1,12 +1,15 @@
 package handler
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"gitlab.com/idoko/letterpress/db"
 	"gitlab.com/idoko/letterpress/models"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 func (h *Handler) CreatePost(c *gin.Context) {
@@ -103,4 +106,54 @@ func (h *Handler) GetPost(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		}
 	}
+}
+
+func (h *Handler) SearchPosts(c *gin.Context) {
+	var query string
+	if query, _ = c.GetQuery("q"); query == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "no search query present"})
+		return
+	}
+
+	//body := `{"query" : { "match_all" : {}" }}`
+	body := fmt.Sprintf(
+		`{"query": {"multi_match": {"query": "%s", "fields": ["title", "body"]}}}`,
+		query)
+	res, err := h.ESClient.Search(
+		h.ESClient.Search.WithContext(context.Background()),
+		h.ESClient.Search.WithIndex("posts"),
+		h.ESClient.Search.WithBody(strings.NewReader(body)),
+		h.ESClient.Search.WithPretty(),
+		)
+	if err != nil {
+		h.Logger.Err(err).Msg("elasticsearch error")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	defer res.Body.Close()
+	if res.IsError() {
+		var e map[string]interface{}
+		if err := json.NewDecoder(res.Body).Decode(&e); err != nil {
+			h.Logger.Err(err).Msg("error parsing the response body")
+		} else {
+			// Print the response status and error information.
+			h.Logger.Err(fmt.Errorf("[%s] %s: %s",
+				res.Status(),
+				e["error"].(map[string]interface{})["type"],
+				e["error"].(map[string]interface{})["reason"],
+			)).Msg("failed to search query")
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": e["error"].(map[string]interface{})["reason"]})
+		return
+	}
+
+	h.Logger.Info().Interface("res", res.Status())
+
+	var r map[string]interface{}
+	if err := json.NewDecoder(res.Body).Decode(&r); err != nil {
+		h.Logger.Err(err).Msg("elasticsearch error")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": r})
 }

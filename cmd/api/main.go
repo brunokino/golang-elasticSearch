@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/elastic/go-elasticsearch/v7"
 	"os"
 	"strconv"
 
@@ -36,7 +37,13 @@ func main() {
 	}
 	logger.Info().Msg("Database connection established")
 
-	h := handler.New(dbInstance, logger)
+	esClient, err := elasticsearch.NewDefaultClient()
+	if err != nil {
+		logger.Err(err).Msg("Connection failed")
+		os.Exit(1)
+	}
+
+	h := handler.New(dbInstance, esClient, logger)
 	router := gin.Default()
 	rg := router.Group("/v1")
 	h.Register(rg)
