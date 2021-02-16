@@ -7,7 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
-	db "gitlab.com/idoko/letterpress/db"
+	"gitlab.com/idoko/letterpress/db"
 	"gitlab.com/idoko/letterpress/handler"
 )
 

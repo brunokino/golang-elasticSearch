@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/bxcodec/faker/v3"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -16,11 +17,12 @@ func main() {
 		// hard-coding connection info since we only have to seed on the dev machine
 		Host: "localhost",
 		Port: 5432,
-		Username: os.Getenv("POSTGRES_USER"),
-		Password: os.Getenv("POSTGRES_PASSWORD"),
-		DbName: os.Getenv("POSTGRES_DB"),
+		Username: "letterpress",
+		Password: "letterpress_secrets",
+		DbName: "letterpress_db",
 	}
 
+	fmt.Printf("%v", dbConfig)
 	dbInstance, err := db.Init(dbConfig)
 	if err != nil {
 		logger.Err(err).Msg("Connection failed")

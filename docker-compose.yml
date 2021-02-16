@@ -6,9 +6,6 @@ services:
     restart: unless-stopped
     hostname: postgres
     env_file: .env
-    # environment so that we can run sql-migrate in the container without fiddling with env stuff
-    # environment:
-    #  - POSTGRES_DSN="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=disable"
     ports:
       - "5432:5432"
     volumes:
@@ -22,8 +19,6 @@ services:
     env_file: .env
     ports:
       - "8080:8080"
-    volumes:
-      - ./db/migrations/:/migrations/
     depends_on:
       - postgres
 
@@ -42,7 +37,6 @@ services:
       context: logstash
     env_file: .env
     volumes:
-      - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml
       - ./logstash/config/pipelines.yml:/usr/share/logstash/config/pipelines.yml
       - ./logstash/pipelines/:/usr/share/logstash/pipeline/
       - ./logstash/queries/:/usr/share/logstash/config/queries/
